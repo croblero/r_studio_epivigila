@@ -7,7 +7,9 @@ library(plyr)
 #Cargar BD Epivigila descargada
 epivigila<- read_csv(file.choose())
 
-#Extraer fecha máxima de creación
+#Extraer fecha de creación y obtener la última
+#para poder nombrar los archivos posteriormente.
+#Se interpretará como la fecha de última actualización
 fecha_creacion <- ymd_hms(epivigila$fecha_creacion)  
 f_act <- max(fecha_creacion)
 f <- date(f_act)
@@ -15,30 +17,34 @@ h <- hour(f_act)
 m <- minute(f_act)
 s <- second(f_act)
 
-# Filtrar comunas de nuestro SS
+# Filtrar comunas de nuestro Servicio de Salud.
+# En nuestra región hay 3 Servicios, así que debemos
+# filtrar sólo las comunas que nos interesan.
 epivigila_ssdr <- filter(epivigila, epivigila$cont_comuna %in% c("Calbuco",
-                                                                         "Chaitén",
-                                                                         "Cochamó",
-                                                                         "Fresia",
-                                                                         "Frutillar",
-                                                                         "Futaleufú",
-                                                                         "Hualaihué",
-                                                                         "Llanquihue",
-                                                                         "Los Muermos",
-                                                                         "Maullín",
-                                                                         "Palena",
-                                                                         "Puerto Montt",
-                                                                         "Puerto Varas"))
+                                                                 "Chaitén",
+                                                                 "Cochamó",
+                                                                 "Fresia",
+                                                                 "Frutillar",
+                                                                 "Futaleufú",
+                                                                 "Hualaihué",
+                                                                 "Llanquihue",
+                                                                 "Los Muermos",
+                                                                 "Maullín",
+                                                                 "Palena",
+                                                                 "Puerto Montt",
+                                                                 "Puerto Varas"))
 
 #Filtrar sólo contactos
+#Los pacientes se clasifican como caso o contacto.
 ev_ssdr_contactos <- filter(epivigila_ssdr, epivigila_ssdr$tipo_seguimiento == "contacto")
 
 # Filtrar sólo contactos del día 1
+# Los pacientes se repiten 14 veces en la BD, cambiando principalmente la
+# información de seguimiento.
 ev_ssdr_contactos_dia1 <- filter(ev_ssdr_contactos , ev_ssdr_contactos$dia_contacto == 1)
 
-# Cambiar inicio cuarentena a formato fecha
-# 
-# 
+# Cambiar inicio cuarentena a formato fecha, para poder
+# realizar operaciones con ella.
 ev_ssdr_contactos_dia1 <- mutate(ev_ssdr_contactos_dia1,
                                  cont_inicio_cuarentena2 = ymd(ev_ssdr_contactos_dia1$cont_inicio_cuarentena))
 ev_ssdr_contactos_dia1 <- select(ev_ssdr_contactos_dia1, -cont_inicio_cuarentena)
@@ -48,24 +54,11 @@ names (ev_ssdr_contactos_dia1)[names(ev_ssdr_contactos_dia1) == 'cont_inicio_cua
 #filtrar por fecha de inicio de cuarentena
 #10 días previos
 
-#ev_ssdr_CE <- filter(ev_ssdr_contactos_dia1, cont_inicio_cuarentena
-#                     %in% c(today()-7,
-#                            today()-6,
-#                            today()-5,
-#                            today()-4,
-#                            today()-3,
-#                            today()-2,
-#                            today()-1,
-#                            today()
-#                            ))
-
 ev_ssdr_CE <- filter(ev_ssdr_contactos_dia1, cont_inicio_cuarentena >= today()-10)
 
 # Eliminar repetidos de cont_n_identificacion
 ev_ssdr_CE <- ev_ssdr_CE %>% 
   distinct(cont_n_identificacion, .keep_all = TRUE)
-
-names(ev_ssdr_CE)
 
 ev_ssdr_CE <- ev_ssdr_CE[c("n_folio",
                            "tipo_seguimiento",
@@ -106,9 +99,11 @@ write.xlsx(ev_ssdr_CE, paste0("epivigila_CE_SSDR_ult10dias_al_",
                               "m",
                               ".xlsx"))
 
+# Tabla de total de pacientes según fecha de inicio de cuarentena
 table(ev_ssdr_CE$cont_inicio_cuarentena)
 
 #Guardar excel de BD epivigila con fecha y hora de última actualización
+#Esto puede ser útil para compartir la BD en un formato más común
 write.xlsx(epivigila, paste0("epivigila_bd_actualizada_al_",
                              f,
                              "_",
