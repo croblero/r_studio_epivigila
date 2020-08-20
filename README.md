@@ -14,11 +14,6 @@ bien estructurada, que requiere de varios filtros para poder ser utilizada
 en la gestión interna de los casos y contactos estrechos, así como en la
 evaluación del seguimiento registrado en el sistema.
 
-Este repositorio tiene como objetivo compartir el código escrito para
-filtrar los datos, para que otros puedan usarlo y también comentarlo, ya
-que al estar aprendiendo a usar R, mi código requiere de mucha optimización
-y puede contener errores.
-
-Saludos,
+Se agradece cualquier aporte. Saludos,
 
 Cristián.
